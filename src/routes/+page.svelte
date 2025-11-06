@@ -17,6 +17,16 @@
     let previewB = ''; // For the file preview
     let selectedKeyB = '';
 
+    // --- Result State Variables ---
+    let matches = [];
+    let mismatchesA = [];
+    let mismatchesB = [];
+    let activeTab = 'matches'; // Controls which result tab is showing
+    let resultsHeaders = []; // To store the headers for the results table
+
+    // This will track if a comparison has been run
+    let hasResults = false;
+
     // --- Reactive Variables ---
     // This 'isReady' variable will automatically re-calculate
     // whenever dataA or dataB changes. We use it to enable/disable the button.
@@ -85,8 +95,8 @@
         console.log("Created lookup map from File B:", lookupMapB);
 
         // Iterate through File A and perform the lookup
-        const matches = [];
-        const mismatchesA = []; // In A, not in B
+        matches = [];
+        mismatchesA = []; // In A, not in B
 
         for (const rowA of dataA) {
             const lookupValue = String(rowA[selectedKeyA]); // Convert key to string
@@ -106,7 +116,7 @@
             lookupMapA.set(String(row[selectedKeyA]), row); // Convert key to string
         }
         
-        const mismatchesB = []; // In B, not in A
+        mismatchesB = []; // In B, not in A
         for (const rowB of dataB) {
             const lookupValue = String(rowB[selectedKeyB]);
             if (!lookupMapA.has(lookupValue)) {
@@ -114,15 +124,33 @@
             }
         }
 
-        // Log the final results to the console (for now).
-        // In our next step, we will display this in the UI.
-        console.log("--- Comparison Results ---");
-        console.log(`✅ Matches Found: ${matches.length}`, matches);
-        console.log(`❌ In File A (not in B): ${mismatchesA.length}`, mismatchesA);
-        console.log(`❌ In File B (not in A): ${mismatchesB.length}`, mismatchesB);
+    // --- Update State with Results ---
+    // Svelte's reactivity will automatically update the UI
+    // when we assign these new array values.
 
-        // We can show a simple alert to prove it worked
-        alert(`Comparison Complete!\n\nMatches: ${matches.length}\nIn A, not B: ${mismatchesA.length}\nIn B, not A: ${mismatchesB.length}\n\n(Check console for full data)`);
+    // We use the spread operator '...' to create a new array,
+    // which guarantees Svelte detects the change.
+    matches = [...matches];
+    mismatchesA = [...mismatchesA];
+    mismatchesB = [...mismatchesB];
+
+    // Set up headers for the results table
+    // We'll just use the headers from the 'matches' array (which is a merge)
+    if (matches.length > 0) {
+        resultsHeaders = Object.keys(matches[0]);
+    } else if (mismatchesA.length > 0) {
+        resultsHeaders = Object.keys(mismatchesA[0]);
+    } else if (mismatchesB.length > 0) {
+        resultsHeaders = Object.keys(mismatchesB[0]);
+}
+
+hasResults = true; // Show the results section
+activeTab = 'matches'; // Default to the 'matches' tab
+
+console.log("--- Comparison Complete. Results are now in state. ---");
+console.log("Matches:", matches);
+console.log("Mismatches A:", mismatchesA);
+console.log("Mismatches B:", mismatchesB);
     }
 </script>
 
@@ -194,6 +222,74 @@
             {/if}
         </button>
     </div>
+    {#if hasResults}
+        <section class="results-section">
+            <h2>Results</h2>
+
+            <div class="tabs">
+                <button 
+                    class="tab-button" 
+                    class:active={activeTab === 'matches'}
+                    on:click={() => activeTab = 'matches'}
+                >
+                    ✅ Matches ({matches.length})
+                </button>
+                <button 
+                    class="tab-button"
+                    class:active={activeTab === 'mismatchesA'}
+                    on:click={() => activeTab = 'mismatchesA'}
+                >
+                    ❌ In File A only ({mismatchesA.length})
+                </button>
+                <button 
+                    class="tab-button"
+                    class:active={activeTab === 'mismatchesB'}
+                    on:click={() => activeTab = 'mismatchesB'}
+                >
+                    ❌ In File B only ({mismatchesB.length})
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            {#each resultsHeaders as header}
+                                <th>{header}</th>
+                            {/each}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#if activeTab === 'matches'}
+                            {#each matches as row}
+                                <tr>
+                                    {#each resultsHeaders as header}
+                                        <td>{row[header]}</td>
+                                    {/each}
+                                </tr>
+                            {/each}
+                        {:else if activeTab === 'mismatchesA'}
+                            {#each mismatchesA as row}
+                                <tr>
+                                    {#each resultsHeaders as header}
+                                        <td>{row[header]}</td>
+                                    {/each}
+                                </tr>
+                            {/each}
+                        {:else if activeTab === 'mismatchesB'}
+                            {#each mismatchesB as row}
+                                <tr>
+                                    {#each resultsHeaders as header}
+                                        <td>{row[header]}</td>
+                                    {/each}
+                                </tr>
+                            {/each}
+                        {/if}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {/if}   
 </main>
 
 <style>
@@ -289,5 +385,80 @@
         .container {
             grid-template-columns: 1fr;
         }
+    }
+    /* --- Results Section Styles --- */
+    .results-section {
+        margin-top: 2rem;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden; /* This is key for the table container */
+    }
+
+    .results-section h2 {
+        padding: 1.5rem 1.5rem 0 1.5rem;
+        margin: 0;
+    }
+
+    .tabs {
+        display: flex;
+        padding: 0 1.5rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .tab-button {
+        padding: 1rem 1.25rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #555;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -1px; /* Aligns with the parent border */
+    }
+
+    .tab-button:hover {
+        background-color: #f9f9f9;
+    }
+
+    /* This 'active' class is toggled by Svelte */
+    .tab-button.active {
+        color: #3498db;
+        border-bottom-color: #3498db;
+    }
+
+    .table-container {
+        width: 100%;
+        max-height: 500px; /* Make the table scrollable */
+        overflow: auto; /* Adds scrollbars only if needed */
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #f0f0f0;
+        white-space: nowrap; /* Prevents text from wrapping */
+    }
+
+    .data-table th {
+        background-color: #fcfcfc;
+        font-weight: 600;
+        position: sticky; /* Makes headers stick on scroll */
+        top: 0;
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tr:hover {
+        background-color: #f9f9f9;
     }
 </style>
