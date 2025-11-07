@@ -1,0 +1,86 @@
+<svelte:head>
+    <title>Our Roadmap - Data Merge Tool</title>
+</svelte:head>
+
+<main>
+    <h1>Our Public Roadmap</h1>
+    <p>
+        We build what our users need. 
+        <a href="https://forms.gle/uGXSuYcz1kZxgcvq9" target="_blank">Add your ideas</a>!
+    </p>
+
+    <div class="roadmap-grid">
+        <section class="roadmap-column">
+            <h2>✅ Shipped</h2>
+            <ul>
+                <li>Core CSV Compare & Merge</li>
+                <li>Freemium Paywall (1000 rows)</li>
+                <li>PWA "Add to Home Screen"</li>
+            </ul>
+        </section>
+
+        <section class="roadmap-column">
+            <h2>Building Next</h2>
+            <ul>
+                <li>XLSX (.xls, .xlsx) File Support</li>
+            </ul>
+        </section>
+
+        <section class="roadmap-column">
+            <h2>💡 Under Consideration</h2>
+            <ul>
+                <li>Data "Update" Function</li>
+                <li>Saving Column Map Templates</li>
+                <li>Fuzzy Matching</li>
+            </ul>
+        </section>
+    </div>
+
+    <a href="/app" class="back-link">← Back to the app</a>
+</main>
+
+<style>
+    main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 2rem;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #333;
+    }
+    h1 {
+        color: #2c3e50;
+    }
+    .roadmap-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+    .roadmap-column {
+        background: #f9f9f9;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    h2 {
+        margin-top: 0;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 0.5rem;
+    }
+    ul {
+        padding-left: 1.25rem;
+    }
+    li {
+        margin-bottom: 0.5rem;
+    }
+    a {
+        color: #3498db;
+        font-weight: 500;
+    }
+    .back-link {
+        display: inline-block;
+        margin-top: 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+</style>

@@ -4,6 +4,7 @@
     // ---------------------------------
     import Papa from 'papaparse';
     import PayfastButton from '$lib/components/PayfastButton.svelte';
+    import logo from '$lib/assets/icon-512.png';
 
     // --- Svelte State Variables ---
     // In Svelte, we just declare variables. When they change,
@@ -172,8 +173,18 @@ console.log("Mismatches B:", mismatchesB);
 </script>
 
 <main>
+    <img src={logo} alt="Data Merge Logo" class="logo" />
+
     <h1>Data Merge Tool</h1>
     <p>Upload two CSV files, select the columns to match, and run the comparison.</p>
+
+    <a 
+        href="https://forms.gle/uGXSuYcz1kZxgcvq9" 
+        target="_blank" 
+        class="feedback-link"
+    >
+        Got an idea or found a bug? Let us know!
+    </a>
 
     <div class="container">
         <div class="card">
@@ -554,5 +565,27 @@ console.log("Mismatches B:", mismatchesB);
 
     .payfast-button:hover {
         background-color: #1b803a;
+    }
+
+    /* Add this for the logo */
+    .logo {
+        width: 60px;
+        height: 60px;
+        display: block;
+        margin: 0 auto 1rem auto;
+    }
+
+    /* Add this for the feedback link */
+    .feedback-link {
+        display: inline-block;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #3498db;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+    .feedback-link:hover {
+        color: #2980b9;
     }
 </style>

@@ -1,6 +1,7 @@
 <script>
     import { goto } from '$app/navigation';
     import PayfastButton from '$lib/components/PayfastButton.svelte';
+    import logo from '$lib/assets/icon-512.png';
 
     function goToApp() {
         goto('/app'); // Navigates user to the app page
@@ -9,6 +10,7 @@
 
 <main>
     <header>
+        <img src={logo} alt="Data Merge Logo" class="logo" />
         <h1>The Fastest Way to Compare & Merge CSVs</h1>
         <p class="subhead">
             Stop fighting with VLOOKUP. Get your data matched in seconds,
@@ -144,5 +146,12 @@
 
     .feature-item h3 {
         margin-top: 0;
+    }
+    
+    /* Add this for the logo */
+    .logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1rem;
     }
 </style>
