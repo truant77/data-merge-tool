@@ -36,7 +36,7 @@
 
     // --- Paywall State ---
     let showUpgradeModal = false;
-    const FREE_TIER_LIMIT = 5; // Set to 5 for easy testing. We'll change this to 1000 later.
+    const FREE_TIER_LIMIT = 500; // Set to 5 for easy testing. We'll change this to 1000 later.
 
     /**
      * Handles file parsing for either File A or File B.
@@ -173,11 +173,14 @@ console.log("Mismatches B:", mismatchesB);
 </script>
 
 <main>
-    <img src={logo} alt="Data Merge Logo" class="logo" />
+    <a href="/" aria-label="Go to Homepage" class="logo-link">
+        <img src={logo} alt="Data Merge Logo" class="logo" />
+    </a>
 
     <h1>Data Merge Tool</h1>
     <p>Upload two CSV files, select the columns to match, and run the comparison.</p>
 
+    <div class="page-links">
     <a 
         href="https://forms.gle/uGXSuYcz1kZxgcvq9" 
         target="_blank" 
@@ -185,6 +188,10 @@ console.log("Mismatches B:", mismatchesB);
     >
         Got an idea or found a bug? Let us know!
     </a>
+    <a href="/roadmap" class="feedback-link">
+        See our Public Roadmap
+    </a>
+    </div>
 
     <div class="container">
         <div class="card">
@@ -575,6 +582,11 @@ console.log("Mismatches B:", mismatchesB);
         margin: 0 auto 1rem auto;
     }
 
+    .logo-link {
+        display: block; /* Makes the whole block clickable */
+        text-decoration: none; /* Removes underline */
+        margin-bottom: 1rem;
+    }
     /* Add this for the feedback link */
     .feedback-link {
         display: inline-block;
@@ -587,5 +599,18 @@ console.log("Mismatches B:", mismatchesB);
     }
     .feedback-link:hover {
         color: #2980b9;
+    }
+    .page-links {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.75rem; /* Adds a bit of space */
+        margin-bottom: 1.5rem;
+    }
+
+    /* We already have .feedback-link, just add this */
+    .link-divider {
+        color: #ccc;
+        font-size: 0.9rem;
     }
 </style>
