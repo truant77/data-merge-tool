@@ -7,18 +7,21 @@
 	import { tick } from 'svelte';
 	import PayfastButton from '$lib/components/PayfastButton.svelte';
 	import logo from '$lib/assets/icon-512.png';
+    import * as XLSX from 'xlsx';
 
 	// --- Svelte 5 State Variables ---
 	// We must use $state() to make variables reactive
 	let dataA = $state(null);
 	let headersA = $state([]);
-	let previewA = $state('');
-	let filenameA = $state('');
+    let filenameA = $state('');
+    let previewDataA = $state([]); // Stores the 5 rows of data
+    let previewHeadersA = $state([]); // Stores the column headers
 	let selectedKeyA = $state('');
 
 	let dataB = $state(null);
 	let headersB = $state([]);
-	let previewB = $state('');
+    let previewDataB = $state([]); // Stores the 5 rows of data
+    let previewHeadersB = $state([]); // Stores the column headers
 	let filenameB = $state('');
 	let selectedKeyB = $state('');
 
@@ -44,39 +47,88 @@
 	/**
 	 * Handles file parsing for either File A or File B.
 	 */
-	async function handleFile(event, fileType) {
-		const file = event.target.files[0];
-		if (!file) return;
-		const filename = file.name;
+    async function handleFile(event, fileType) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-		// 1. Generate the text preview
-		const textPreview = await file.slice(0, 1024).text();
+        const filename = file.name;
+        const fileExt = filename.split('.').pop().toLowerCase();
 
-		// 2. Parse the full file with PapaParse
-		Papa.parse(file, {
-			header: true,
-			dynamicTyping: true,
-			skipEmptyLines: true,
-			complete: (results) => {
-				console.log(`File ${fileType} Parsed:`, results.data);
+        if (fileExt === 'csv') {
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: (results) => {
+                    console.log(`CSV File ${fileType} Parsed:`, results.data);
+                    const previewData = results.data.slice(0, 5);
+                    const previewHeaders = results.meta.fields;
 
-				if (fileType === 'A') {
-					dataA = results.data;
-					headersA = results.meta.fields;
-					selectedKeyA = headersA[0];
-					previewA = textPreview;
-					filenameA = filename;
-				} else {
-					dataB = results.data;
-					headersB = results.meta.fields;
-					selectedKeyB = headersB[0];
-					previewB = textPreview;
-					filenameB = filename;
-				}
-			},
-			error: (error) => console.error(`Error parsing File ${fileType}:`, error.message)
-		});
-	}
+                    if (fileType === 'A') {
+                        dataA = results.data;
+                        headersA = results.meta.fields;
+                        selectedKeyA = headersA[0];
+                        filenameA = filename;
+                        previewDataA = previewData;
+                        previewHeadersA = previewHeaders;
+                    } else {
+                        dataB = results.data;
+                        headersB = results.meta.fields;
+                        selectedKeyB = headersB[0];
+                        filenameB = filename;
+                        previewDataB = previewData;
+                        previewHeadersB = previewHeaders;
+                    }
+                },
+                error: (error) => console.error(`Error parsing File ${fileType}:`, error.message)
+            });
+
+        } else if (fileExt === 'xlsx' || fileExt === 'xls') {
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+
+            reader.onload = (e) => {
+                const data = e.target.result;
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                const previewData = jsonData.slice(0, 5);
+                const previewHeaders = Object.keys(jsonData[0] || {});
+
+                const results = {
+                    data: jsonData,
+                    meta: { fields: previewHeaders }
+                };
+
+                console.log(`Excel File ${fileType} Parsed:`, results.data);
+
+                if (fileType === 'A') {
+                    dataA = results.data;
+                    headersA = results.meta.fields;
+                    selectedKeyA = headersA[0];
+                    filenameA = filename;
+                    previewDataA = previewData;
+                    previewHeadersA = previewHeaders;
+                } else {
+                    dataB = results.data;
+                    headersB = results.meta.fields;
+                    selectedKeyB = headersB[0];
+                    filenameB = filename;
+                    previewDataB = previewData;
+                    previewHeadersB = previewHeaders;
+                }
+            };
+
+            reader.onerror = (error) => {
+                console.error(`Error reading Excel file:`, error);
+            };
+
+        } else {
+            alert("Unsupported file type. Please upload a .csv, .xlsx, or .xls file.");
+        }
+    }
 
 	/**
 	 * Resets all state variables for a given file type (A or B).
@@ -84,16 +136,18 @@
 	function resetFile(fileType) {
 		if (fileType === 'A') {
 			dataA = null;
-			headersA = [];
-			previewA = '';
-			selectedKeyA = '';
-			filenameA = '';
+            headersA = [];
+            selectedKeyA = '';
+            filenameA = '';
+            previewDataA = []; 
+            previewHeadersA = []; 
 		} else {
 			dataB = null;
-			headersB = [];
-			previewB = '';
-			selectedKeyB = '';
-			filenameB = '';
+            headersB = [];
+            selectedKeyB = '';
+            filenameB = '';
+            previewDataB = []; 
+            previewHeadersB = [];
 		}
 
 		// If we remove a file, any previous results are now invalid
@@ -103,7 +157,7 @@
 		mismatchesB = [];
 	}
 
-	/**
+    /**
 	 * This is our main "VLOOKUP" function.
 	 */
 	async function runComparison() {
@@ -261,7 +315,7 @@
             {#if !dataA}
                 <input 
                     type="file" 
-                    accept=".csv" 
+                    accept=".csv,.xlsx,.xls" 
                     onchange={(event) => handleFile(event, 'A')} 
                 />
             {:else}
@@ -287,8 +341,27 @@
                 </div>
         
                 <div class="preview-box">
-                    <strong>Preview:</strong>
-                    <pre>{previewA}</pre>
+                    <strong>Preview (first 5 rows):</strong>
+                    <div class="table-preview-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    {#each previewHeadersA as header}
+                                        <th>{header}</th>
+                                    {/each}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each previewDataA as row}
+                                    <tr>
+                                        {#each previewHeadersA as header}
+                                            <td>{row[header]}</td>
+                                        {/each}
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             {/if}
         </div>
@@ -299,7 +372,7 @@
             {#if !dataB}
                 <input 
                     type="file" 
-                    accept=".csv" 
+                    accept=".csv,.xlsx,.xls" 
                     onchange={(event) => handleFile(event, 'B')} 
                 />
             {:else}
@@ -325,8 +398,27 @@
                 </div>
         
                 <div class="preview-box">
-                    <strong>Preview:</strong>
-                    <pre>{previewB}</pre>
+                    <strong>Preview (first 5 rows):</strong>
+                    <div class="table-preview-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    {#each previewHeadersB as header}
+                                        <th>{header}</th>
+                                    {/each}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each previewDataB as row}
+                                    <tr>
+                                        {#each previewHeadersB as header}
+                                            <td>{row[header]}</td>
+                                        {/each}
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             {/if}
         </div>
@@ -419,8 +511,17 @@
         </section>
     {/if}
     {#if showUpgradeModal}
-        <div class="modal-backdrop" onclick={() => showUpgradeModal = false} role="button" tabindex="0">
-            <div class="modal" onclick={(event) => event.stopPropagation()}>
+        <div class="modal-backdrop" 
+            onclick={() => showUpgradeModal = false} 
+            onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (showUpgradeModal = false)} 
+            role="button" 
+            tabindex="0">
+            <div class="modal" 
+                role="dialog" 
+                aria-modal="true" 
+                tabindex="-1"
+                onclick={(event) => event.stopPropagation()}
+                onkeydown={(event) => event.stopPropagation()}>
                 <h2>Free Limit Reached</h2>
                 <p>
                     Your file has more than {FREE_TIER_LIMIT} rows.
@@ -460,6 +561,7 @@
     h1 {
         color: #2c3e50;
         text-align: center;
+        font-size: 2.2rem;
     }
     p {
         text-align: center;
@@ -476,6 +578,7 @@
         border-radius: 8px;
         padding: 1.5rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
     }
 
     .file-info-header {
@@ -538,19 +641,39 @@
     
     .preview-box {
         margin-top: 1rem;
+        /* We'll let the wrapper handle the background */
+    }
+
+    /* This wrapper makes the table scroll horizontally */
+    .table-preview-wrapper {
+        max-width: 100%;
+        overflow-x: auto;
+        max-height: 200px; /* Limit height and scroll vertically */
+        overflow-y: auto;
         background-color: #fafafa;
         border: 1px solid #eee;
         border-radius: 4px;
-        padding: 0.5rem 1rem;
+        margin-top: 0.5rem;
     }
 
-    /* 'pre' is for pre-formatted text, perfect for code/CSV previews */
-    pre {
-        white-space: pre-wrap; /* Wrap long lines */
-        word-break: break-all; /* Break long words */
+    .preview-box table {
+        width: 100%;
+        border-collapse: collapse;
         font-size: 0.8rem;
-        max-height: 100px;
-        overflow-y: auto;
+    }
+
+    .preview-box th,
+    .preview-box td {
+        padding: 0.4rem 0.6rem;
+        text-align: left;
+        border: 1px solid #e0e0e0;
+        white-space: nowrap; /* Keeps cells on one line */
+    }
+
+    .preview-box th {
+        background-color: #f1f1f1;
+        position: sticky; /* Stick headers on horizontal scroll */
+        top: 0;
     }
 
     .run-section {
