@@ -6,7 +6,7 @@
 	import * as Papa from 'papaparse';
 	import { tick } from 'svelte';
 	import PayfastButton from '$lib/components/PayfastButton.svelte';
-	import logo from '$lib/assets/icon-512.png';
+	import logo from '$lib/assets/vennaro_logo.png';
     import * as XLSX from 'xlsx';
 
 	// --- Svelte 5 State Variables ---
