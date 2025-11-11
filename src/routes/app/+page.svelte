@@ -35,7 +35,7 @@
 
 	// --- Paywall State ---
 	let showUpgradeModal = $state(false);
-	const FREE_TIER_LIMIT = 1000;
+	const FREE_TIER_LIMIT = 500;
 
 	// --- Svelte 5 Derived State ---
 	// This replaces $: isReady
@@ -565,12 +565,12 @@
                     Your file has more than {FREE_TIER_LIMIT} rows.
                 </p>
                 <p>
-                    To process unlimited rows, support for XLSX files, and save mapping templates,
-                    please upgrade to <strong>Pro</strong>.
+                    To process unlimited rows and access Premium features,
+                    please upgrade to <strong>Pro</strong> (one-time payment, no auto-renewal).
                 </p>
 
                 <PayfastButton class="payfast-button">
-                    Upgrade to Pro (R79.99/mo)
+                    Upgrade to Pro<br>($19/year)
                 </PayfastButton>
 
                 <button class="modal-close" onclick={() => showUpgradeModal = false}>
@@ -843,7 +843,8 @@
         width: 90%;
         max-width: 500px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        position: relative; /* For the close button */
+        position: relative; 
+        text-align: center;/* For the close button */
     }
 
     .modal h2 {

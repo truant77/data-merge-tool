@@ -23,6 +23,7 @@
                 <li>PWA "Add to Home Screen"</li>
                 <li>Excel (.xlsx & .xls) File Support</li>
                 <li>File Preview Table</li>
+                <li>Excel and CSV Download</li>
             </ul>
         </section>
 
@@ -30,17 +31,19 @@
             <h2>🛠️ Building Next</h2>
             <ul>
                 <li>Automated Pro License Delivery</li>
+                <li>Export Column Selector</li>
             </ul>
         </section>
 
         <section class="roadmap-column">
             <h2>💡 Under Consideration</h2>
             <ul>
-                <li>Data "Update" Function</li>
-                <li>Saving Column Map Templates</li>
                 <li>Fuzzy Matching</li>
-                <li>Export Column Selector</li>
+                <li>Data "Update" Function</li>
+                <li>Multi-Column Matching</li>
                 <li>Drag-and-Drop File Uploads</li>
+                <li>Supabase Auth & Database (V2)</li>
+                <li>Saving Column Map Templates</li>
             </ul>
         </section>
     </div>

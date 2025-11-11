@@ -18,10 +18,10 @@
         </p>
         <div class="cta-buttons">
             <button class="cta-primary" onclick={goToApp}>
-                Use App for Free
+                Use App for Free<br>(500 rows)
             </button>
             <PayfastButton class="cta-secondary">
-                Upgrade to Pro
+                Upgrade to Pro<br>($19/year)
             </PayfastButton>
         </div>
     </header>
@@ -47,7 +47,7 @@
                 <h3>📈 Unlimited Power</h3>
                 <p>
                     Our free tier gives you 500 rows to play with. Upgrade to Pro for
-                    unlimited rows and Premium features.
+                    unlimited rows and Premium features (one-time payment, no auto-renewal).
                 </p>
             </div>
         </div>
