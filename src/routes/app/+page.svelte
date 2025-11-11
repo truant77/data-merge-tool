@@ -8,6 +8,8 @@
 	import PayfastButton from '$lib/components/PayfastButton.svelte';
 	import logo from '$lib/assets/vennaro_logo.png';
     import * as XLSX from 'xlsx';
+    import Modal from '$lib/components/Modal.svelte';
+    import ColumnSelector from '$lib/components/ColumnSelector.svelte';
 
 	// --- Svelte 5 State Variables ---
 	// We must use $state() to make variables reactive
@@ -36,6 +38,11 @@
 	// --- Paywall State ---
 	let showUpgradeModal = $state(false);
 	const FREE_TIER_LIMIT = 500;
+
+    //Column Selector State
+    let showColumnSelector = $state(false);
+    let columnsToExport = $state([]);
+    let downloadFormat = $state(''); // 'csv' or 'excel'
 
 	// --- Svelte 5 Derived State ---
 	// This replaces $: isReady
@@ -248,76 +255,103 @@
 	/**
 	 * Handles downloading the currently active result set as a CSV file.
 	 */
-	function downloadCSV() {
-		let dataToExport = [];
-		let filename = 'results.csv';
-
-		if (activeTab === 'matches') {
-			dataToExport = matches;
-			filename = 'matches.csv';
-		} else if (activeTab === 'mismatchesA') {
-			dataToExport = mismatchesA;
-			filename = 'mismatches_file_A.csv';
-		} else if (activeTab === 'mismatchesB') {
-			dataToExport = mismatchesB;
-			filename = 'mismatches_file_B.csv';
-		}
-
-		if (dataToExport.length === 0) {
-			alert("There's no data in this view to download.");
-			return;
-		}
-
-		// Convert the array of objects back into a CSV string
-		const csvString = Papa.unparse(dataToExport);
-
-		// Create a "virtual" link to trigger the download
-		const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-		const link = document.createElement('a');
-		const url = URL.createObjectURL(blob);
-
-		link.setAttribute('href', url);
-		link.setAttribute('download', filename);
-		link.style.visibility = 'hidden';
-
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-	}
-
-    /**
-     * Handles downloading the currently active result set as an Excel file.
+	/**
+     * Opens the column selector modal for a CSV download.
      */
-    function downloadExcel() {
-        let dataToExport = [];
-        let filename = 'results.xlsx';
-
+    function downloadCSV() {
         // 1. Get the data from the currently active tab
-        if (activeTab === 'matches') {
-            dataToExport = matches;
-            filename = 'matches.xlsx';
-        } else if (activeTab === 'mismatchesA') {
-            dataToExport = mismatchesA;
-            filename = 'mismatches_file_A.xlsx';
-        } else if (activeTab === 'mismatchesB') {
-            dataToExport = mismatchesB;
-            filename = 'mismatches_file_B.xlsx';
-        }
-
-        if (dataToExport.length === 0) {
+        const data = getActiveData();
+        if (data.length === 0) {
             alert("There's no data in this view to download.");
             return;
         }
 
-        // 2. Convert the array of objects (JSON) into an Excel sheet
-        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        // 3. Set the format and open the modal
+        downloadFormat = 'csv';
+        showColumnSelector = true;
+    }
 
-        // 3. Create a new workbook and add the sheet
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Results'); // "Results" is the tab name
+    /**
+     * Handles downloading the currently active result set as an Excel file.
+     */
+    /**
+     * Opens the column selector modal for an Excel download.
+     */
+    function downloadExcel() {
+        // 1. Get the data
+        const data = getActiveData();
+        if (data.length === 0) {
+            alert("There's no data in this view to download.");
+            return;
+        }
 
-        // 4. Trigger the download of the Excel file
-        XLSX.writeFile(workbook, filename);
+        // 3. Set the format and open the modal
+        downloadFormat = 'excel';
+        showColumnSelector = true;
+    }
+
+    /**
+     * Helper function to get the data from the active tab.
+     */
+    function getActiveData() {
+        if (activeTab === 'matches') return matches;
+        if (activeTab === 'mismatchesA') return mismatchesA;
+        if (activeTab === 'mismatchesB') return mismatchesB;
+        return [];
+    }
+
+    /**
+     * This is the new download function that the modal will call.
+     * It receives the list of columns the user selected.
+     */
+    function handleConfirmDownload(selectedColumns) {
+        let dataToExport = getActiveData();
+        let filename = 'results';
+
+        // 1. Filter the data to include ONLY the selected columns
+        const filteredData = dataToExport.map(row => {
+            let newRow = {};
+            selectedColumns.forEach(col => {
+                newRow[col] = row[col];
+            });
+            return newRow;
+        });
+
+        // 2. Set the filename
+        if (activeTab === 'matches') filename = 'matches';
+        if (activeTab === 'mismatchesA') filename = 'mismatches_file_A';
+        if (activeTab === 'mismatchesB') filename = 'mismatches_file_B';
+
+        // 3. Call the correct download function
+        if (downloadFormat === 'csv') {
+            const csvString = Papa.unparse(filteredData);
+            triggerCSVDownload(csvString, `${filename}.csv`);
+        } else if (downloadFormat === 'excel') {
+            const worksheet = XLSX.utils.json_to_sheet(filteredData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
+            XLSX.writeFile(workbook, `${filename}.xlsx`);
+        }
+
+        // 4. Close the modal
+        showColumnSelector = false;
+    }
+
+    /**
+     * Helper for triggering a CSV download (to avoid repeating code)
+     */
+    function triggerCSVDownload(csvString, filename) {
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
   
 </script>
@@ -579,6 +613,17 @@
             </div>
         </div>
     {/if}
+
+    <Modal bind:open={showColumnSelector}>
+        <ColumnSelector
+            columnsA={headersA}
+            columnsB={headersB}
+            fileA={filenameA}
+            fileB={filenameB}
+            onCancel={() => showColumnSelector = false}
+            onConfirm={handleConfirmDownload}
+        />
+    </Modal>
 </main>
 
 <style>
@@ -596,11 +641,7 @@
         margin: 0 auto;
     }
 
-    h1 {
-        color: #2c3e50;
-        text-align: center;
-        font-size: 2.2rem;
-    }
+
     p {
         text-align: center;
     }
@@ -717,22 +758,6 @@
     .run-section {
         text-align: center;
         margin-top: 2rem;
-    }
-
-    button {
-        font-size: 1rem;
-        font-weight: 600;
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 6px;
-        background-color: #3498db;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-    button:hover {
-        background-color: #2980b9;
     }
 
     /* This style is applied when the button's 'disabled' attribute is true */
@@ -913,42 +938,35 @@
         flex-direction: column; /* <-- ADD THIS */
         
     }
-
-    .download-button.csv {
+    /* This is the base style for both buttons */
+    .download-button {
         font-size: 0.9rem;
         font-weight: 600;
         color: white;
-        background-color: #3498db;
         border: none;
         padding: 0.5rem 1rem;
         border-radius: 6px;
         text-decoration: none;
         cursor: pointer;
         transition: background-color 0.2s ease;
+    }
+
+    /* Style for the CSV button */
+    .download-button.csv {
+        background-color: #3498db; /* Blue */
     }
 
     .download-button.csv:hover {
         background-color: #2980b9;
     }
 
-    /* This is a new class for the Excel button */
+    /* Style for the Excel button */
     .download-button.excel {
-        /* Base styles (copied from the CSV button) */
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        text-decoration: none;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-
-        /* Excel Green */
-        background-color: #217346; 
+        background-color: #217346; /* Green */
     }
 
     .download-button.excel:hover {
         background-color: #164b2c; /* Darker Green */
     }
+        
 </style>
