@@ -13,13 +13,12 @@
     /**
      * This is the main function. It calls our backend.
      */
-    async function activateKey() {
-        if (isLoading) return; // Prevent double-clicks
+     async function activateKey() {
+        if (isLoading) return;
         isLoading = true;
         status = 'Verifying License Key...';
 
         try {
-            // This is the "API endpoint" for our future Netlify Function.
             const response = await fetch('/.netlify/functions/validate-license', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -28,32 +27,42 @@
 
             const result = await response.json();
 
-            if (response.status === 200 && result.valid === true) {
-                // --- SUCCESS ---
-                status = 'Success! Your Pro pass is now active.';
-                
-                // Save the key to the browser's long-term memory
-                localStorage.setItem('vennaro_license_key', licenseKey);
-                
-                // Tell the main app page that we are now a Pro user
-                onsuccess();
-                
-                // Wait 2 seconds, then close the modal
-                await tick();
-                setTimeout(oncancel, 2000); // oncancel() closes the modal
-
-            } else {
-                // --- FAILURE (Key is not valid) ---
-                status = result.error || 'This license key is not valid. Please check and try again.';
+            // This is the new, important check
+            if (!response.ok) {
+                // This handles all errors (404, 500, etc.)
+                // We trust our backend to send a JSON error
+                status = result.error || 'An unknown error occurred.';
                 isLoading = false;
+                return; // Stop here
             }
 
+            // --- SUCCESS ---
+            // If we get here, response.ok was true (status 200)
+            status = 'Success! Your Pro pass is now active.';
+
+            localStorage.setItem('vennaro_license_key', licenseKey);
+
+            onsuccess();
+
+            await tick();
+            setTimeout(oncancel, 2000); // oncancel() closes the modal
+
         } catch (error) {
-            // --- FAILURE (Network error, etc.) ---
+            // --- CATCH (Network error, etc.) ---
             console.error("Error validating key:", error);
             status = 'An error occurred. Please check your internet and try again.';
             isLoading = false;
         }
+    }
+
+    /**
+     * Resets the form and calls the oncancel prop to close the modal.
+     */
+    function handleCancel() {
+        licenseKey = '';
+        status = '';
+        isLoading = false;
+        oncancel(); // This calls the function from the parent to close the modal
     }
 </script>
 
@@ -70,24 +79,24 @@
         bind:value={licenseKey}
         disabled={isLoading}
         required
+        oninput={() => status = ''}
     />
 
     <div class="actions">
         <button 
             type="button" 
             class="button-secondary" 
-            onclick={oncancel}
-            disabled={isLoading}
+            onclick={handleCancel} disabled={isLoading}
         >
             Cancel
         </button>
         <button 
             type="submit" 
             class="button-primary"
-            disabled={isLoading || licenseKey.length < 5}
+            disabled={isLoading}
         >
             {#if isLoading}
-                Checking...
+                Verifying License Key...
             {:else}
                 Activate
             {/if}

@@ -28,6 +28,7 @@
 		"vite": "^7.1.10"
 	},
 	"dependencies": {
+		"@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
 		"papaparse": "^5.5.3",
 		"xlsx": "^0.18.5"
 	}
