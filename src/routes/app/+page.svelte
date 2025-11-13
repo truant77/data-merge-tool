@@ -10,6 +10,9 @@
     import * as XLSX from 'xlsx';
     import Modal from '$lib/components/Modal.svelte';
     import ColumnSelector from '$lib/components/ColumnSelector.svelte';
+    import LicenseKeyInput from '$lib/components/LicenseKeyInput.svelte';
+    import { onMount } from 'svelte';
+    import proBadge from '$lib/assets/ProBadge.png';
 
 	// --- Svelte 5 State Variables ---
 	// We must use $state() to make variables reactive
@@ -37,6 +40,8 @@
 
 	// --- Paywall State ---
 	let showUpgradeModal = $state(false);
+    let isProUser = $state(false);
+    let showLicenseModal = $state(false);
 	const FREE_TIER_LIMIT = 500;
 
     //Column Selector State
@@ -50,6 +55,20 @@
 
 	// --- Element Bindings ---
 	let resultsHeading = $state(null);
+
+    // --- Check for existing license on load ---
+    
+    onMount(() => {
+        // 'onMount' only runs in the browser, so we don't need 'if (BROWSER)'
+        const savedKey = localStorage.getItem('vennaro_license_key');
+
+        if (savedKey) {
+            console.log("Found existing license key. Upgrading to Pro.");
+            isProUser = true;
+        }
+    });
+
+
 
 	/**
 	 * Handles file parsing for either File A or File B.
@@ -365,16 +384,24 @@
     <p>Upload two Excel or CSV files, pick your match columns, and let the magic happen — no formulas, just instant clarity.</p>
 
     <div class="page-links">
-    <a 
-        href="https://forms.gle/uGXSuYcz1kZxgcvq9" 
-        target="_blank" 
-        class="feedback-link"
-    >
-        Got an idea or found a bug? Let us know!
-    </a>
-    <a href="/roadmap" class="feedback-link">
-        See our Public Roadmap
-    </a>
+
+        {#if isProUser}
+            <img src={proBadge} alt="Pro User Badge" class="pro-badge" />
+        {:else}
+            <button onclick={() => showLicenseModal = true} class="button-primary">
+                Have a license key?
+            </button>
+        {/if}
+        <a href="/roadmap" class="button-primary">
+            See our Public Roadmap
+        </a>
+        <a 
+            href="https://forms.gle/uGXSuYcz1kZxgcvq9" 
+            target="_blank" 
+            class="button-primary"
+        >
+            Got an idea or found a bug? Let us know!
+        </a>
     </div>
 
     <div class="container">
@@ -624,6 +651,16 @@
             onConfirm={handleConfirmDownload}
         />
     </Modal>
+    <Modal bind:open={showLicenseModal}>
+
+        <LicenseKeyInput
+            onsuccess={() => {
+                isProUser = true;
+                showLicenseModal = false;
+            }}
+            oncancel={() => showLicenseModal = false}
+        />
+    </Modal>
 </main>
 
 <style>
@@ -761,13 +798,23 @@
     }
 
     .button-primary {
-        font-size: 1rem;
-        font-weight: 600;
+        /* Layout & Box Model */
+        display: inline-block; /* Makes <a> and <button> behave the same */
         padding: 0.75rem 1.5rem;
         border: none;
         border-radius: 6px;
-        background-color: #3498db;
+
+        /* Typography */
+        font-family: inherit; /* Forces them to use the same font */
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 1.5; /* Normalizes vertical alignment */
         color: white;
+        text-decoration: none; /* Removes underline from <a> */
+        text-align: center; /* Centers text */
+
+        /* Appearance */
+        background-color: #3498db;
         cursor: pointer;
         transition: background-color 0.2s ease;
     }
@@ -922,24 +969,8 @@
         text-decoration: none; /* Removes underline */
         margin-bottom: 1rem;
     }
-    /* Add this for the feedback link */
-    .feedback-link {
-        display: inline-block;
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: white; /* White text */
-        background-color: #3498db; /* Blue background */
-        border: none; /* No border */
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        text-decoration: none;
-        transition: background-color 0.2s ease, transform 0.1s ease;
-    }
-
-    .feedback-link:hover {
-        background-color: #2980b9; /* Darker blue on hover */
-        transform: translateY(-1px);
-    }
+    
+    
     .page-links {
         display: flex;
         justify-content: center;
@@ -989,5 +1020,16 @@
     .download-button.excel:hover {
         background-color: #164b2c; /* Darker Green */
     }
+
+    .pro-badge {
+        /* This ensures it aligns nicely with the other buttons */
+        display: inline-block;
+        height: 47px; /* Adjust this to match the button height */
+        padding: 0;
+        margin: 0;
+        border-radius: 6px; /* Gives it the same rounded corners */
+        vertical-align: middle; /* Aligns it with the button text */
+    }
         
+
 </style>

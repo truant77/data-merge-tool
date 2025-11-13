@@ -65,6 +65,7 @@
     }
     p {
         text-align: center;
+        margin:0;
     }
 
     /* Add this for the logo */
@@ -78,7 +79,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 2rem;
-        margin: 2rem 0;
+        margin: 1rem 0;
         text-align: center;
     }
     .roadmap-column {

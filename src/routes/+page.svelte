@@ -69,7 +69,7 @@
 
     header {
         text-align: center;
-        padding: 1rem 0.5rem 1.5rem 0.5rem;
+        padding: 0 0.5rem 1.5rem 0.5rem;
         background-color: #f4f7f6;
         border-radius: 8px;
     }
