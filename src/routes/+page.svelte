@@ -70,7 +70,7 @@
                 </p>
             </div>
             <div class="feature-item">
-                <h3>📈 Unlimited Power</h3>
+                <h3>📈 Start Free. Scale with Ease</h3>
                 <p>
                     Our free tier gives you 500 rows to play with. Upgrade to Pro for
                     unlimited rows and Premium features (one-time payment, no auto-renewal).
