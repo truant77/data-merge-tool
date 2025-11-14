@@ -22,6 +22,7 @@
         "npm:eslint-plugin-svelte@^3.12.4",
         "npm:eslint@^9.38.0",
         "npm:globals@^16.4.0",
+        "npm:netlify-cli@^23.11.0",
         "npm:papaparse@^5.5.3",
         "npm:prettier-plugin-svelte@^3.4.0",
         "npm:prettier@^3.6.2",

@@ -1,6 +1,19 @@
 <script>
     import { goto } from '$app/navigation';
     import logo from '$lib/assets/vennaro_logo.png';
+    import { onMount } from 'svelte';
+    import proBadge from '$lib/assets/ProBadge.png';
+
+
+    let isProUser = $state(false);
+
+    onMount(() => {
+        const savedKey = localStorage.getItem('vennaro_license_key');
+        if (savedKey) {
+            console.log("Found existing license key. Upgrading to Pro.");
+            isProUser = true;
+        }
+    });
 
     function goToApp() {
         goto('/app'); // Navigates user to the app page
@@ -17,11 +30,25 @@
         </p>
         <div class="cta-buttons">
             <button class="button-primary" onclick={goToApp}>
-                Use App for Free<br>(500 rows)
+                {#if isProUser}
+                    Open App
+                {:else}
+                    Use App for Free
+                    <span class="button-subtext">(500 rows)</span>
+                {/if}
             </button>
-            <a href="https://holmbrewed.lemonsqueezy.com/buy/9672a88b-f6a4-4218-a1a2-099aa89d6998?embed=1&logo=0&discount=0" class="button-primary lemonsqueezy-button">
-                Upgrade to Pro<br>($19/year)
-            </a>
+        
+            {#if isProUser}
+                <img src={proBadge} alt="Pro User Badge" class="pro-badge-image" />
+            {:else}
+                <a 
+                    href="https://holmbrewed.lemonsqueezy.com/buy/9672a88b-f6a4-4218-a1a2-099aa89d6998?embed=1&logo=0&discount=0" 
+                    class="button-primary lemonsqueezy-button"
+                >
+                    Upgrade to Pro
+                    <span class="button-subtext">($19/year)</span>
+                </a>
+            {/if}
         </div>
     </header>
 
@@ -166,4 +193,19 @@
         background-color: #2980b9;
         text-decoration: none; /* <-- Also add here */
     }
+
+    .button-subtext {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 400;
+        opacity: 0.9;
+    }
+
+    .pro-badge-image {
+        display: inline-block;
+        height: 52px; /* Adjust this to match the button height */
+        border-radius: 6px;
+        vertical-align: middle;
+    }
+
 </style>

@@ -1,45 +1,65 @@
 <script>
     import { tick } from 'svelte';
 
-    // This 'open' prop controls visibility
     let { open = false, children } = $props();
 
-    // This lets us bind the dialog element
-    let dialog = $state(null);
-
-    // This is a "rune" that watches the 'open' prop
-    $effect(() => {
-        if (dialog) {
-            if (open) {
-                dialog.showModal(); // Use the built-in HTML <dialog>
-            } else {
-                dialog.close();
-            }
-        }
-    });
-
-    // This allows us to close the modal from the inside
-    function close() {
+    // We'll use this function to handle closing
+    function handleClose() {
         open = false;
     }
 </script>
 
-<dialog bind:this={dialog} onclose={() => open = false}>
-    {@render children()}
-</dialog>
+{#if open}
+    <div 
+        class="modal-backdrop" 
+        onclick={handleClose} 
+        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClose()}
+        role="button" 
+        tabindex="0"
+    >
+        <div 
+            class="modal" 
+            onclick={(e) => e.stopPropagation()}
+            onkeydown={(e) => e.stopPropagation()}
+            role="dialog" 
+            aria-modal="true" 
+            tabindex="-1"
+        >
+            {@render children()}
+        </div>
+    </div>
+{/if}
 
 <style>
-    dialog {
-        border: none;
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        /* This is the fix: We are now in the normal z-index flow.
+          We'll set our backdrop to 99, so Lemon Squeezy (at 2147483647)
+          will always appear on top of it.
+        */
+        z-index: 99;
+    }
+
+    .modal {
+        background: #fff;
         border-radius: 8px;
         padding: 1.5rem;
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         min-width: 400px;
         max-width: 90vw;
-    }
 
-    /* This is the dark overlay */
-    dialog::backdrop {
-        background-color: rgba(0, 0, 0, 0.6);
+        /* We set the modal itself one level higher,
+          so it appears on top of our *own* backdrop.
+        */
+        z-index: 100;
     }
 </style>

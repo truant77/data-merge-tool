@@ -41,6 +41,7 @@
 	
     let isProUser = $state(false);
     let showLicenseModal = $state(false);
+    let showUpgradeModal = $state(false);
 	const FREE_TIER_LIMIT = 500;
 
     //Column Selector State
@@ -187,19 +188,10 @@
 	 */
 	async function runComparison() {
 		// --- PAYWALL CHECK ---
-		if ((dataA.length > FREE_TIER_LIMIT || dataB.length > FREE_TIER_LIMIT) && isProUser === false) {
-            console.warn(`Paywall triggered. Popping Lemon Squeezy checkout.`);
-
-            // Check if the LemonSqueezy script is loaded and ready
-            if (typeof LemonSqueezy !== 'undefined') {
-                // This function is provided by lemon.js to open overlays
-                LemonSqueezy.Url.Open("https://holmbrewed.lemonsqueezy.com/buy/9672a88b-f6a4-4218-a1a2-099aa89d6998?embed=1&logo=0&discount=0");
-            } else {
-                // Fallback in case the script fails to load
-                alert("Redirecting to checkout...");
-                window.location.href = "https://holmbrewed.lemonsqueezy.com/buy/9672a88b-f6a4-4218-a1a2-099aa89d6998?embed=1&logo=0&discount=0";
-            }
-            return; // Stop the function from running
+        if ((dataA.length > FREE_TIER_LIMIT || dataB.length > FREE_TIER_LIMIT) && isProUser === false) {
+            console.warn(`Paywall triggered. Popping upgrade modal.`);
+            showUpgradeModal = true; // <-- JUST OPEN OUR MODAL
+            return; // Stop the function
         }
 		// --- END PAYWALL CHECK ---
 
@@ -621,11 +613,11 @@
 
     <Modal bind:open={showColumnSelector}>
         <ColumnSelector
-            columnsA={headersA}
-            columnsB={headersB}
+            allColumnsA={headersA}
+            allColumnsB={headersB}
             fileA={filenameA}
             fileB={filenameB}
-            onCancel={() => showColumnSelector = false}
+            isProUser={isProUser}  overlayLink="https://holmbrewed.lemonsqueezy.com/buy/9672a88b-f6a4-4218-a1a2-099aa89d6998?embed=1&logo=0&discount=0" onCancel={() => showColumnSelector = false}
             onConfirm={handleConfirmDownload}
         />
     </Modal>
@@ -639,6 +631,48 @@
             oncancel={() => showLicenseModal = false}
         />
     </Modal>
+
+    {#if showUpgradeModal}
+        <div 
+            class="modal-backdrop" 
+            onclick={() => showUpgradeModal = false}
+            onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (showUpgradeModal = false)}
+            role="button" 
+            tabindex="0"
+        >
+            <div 
+                class="modal" 
+                role="dialog" 
+                aria-modal="true" 
+                tabindex="-1"
+                onclick={(event) => event.stopPropagation()}
+                onkeydown={(event) => event.stopPropagation()}
+            >
+                <button class="modal-close" onclick={() => showUpgradeModal = false}>&times;</button>
+
+                <div class="upgrade-modal-content">
+                    <h2>Free Limit Reached</h2>
+                    <p>Your file has more than {FREE_TIER_LIMIT} rows.</p>
+                    <p>
+                        To process unlimited rows and access Premium features, please
+                        upgrade to <strong>Pro</strong> (one-time payment, no auto-renewal).
+                    </p>
+
+                    <button
+                        class="button-primary"
+                        onclick={() => {
+                            if (typeof LemonSqueezy !== 'undefined') {
+                                LemonSqueezy.Url.Open("https://holmbrewed.lemonsqueezy.com/buy/9672a88b-f6a4-4218-a1a2-099aa89d6998?embed=1&logo=0&discount=0");
+                            }
+                        }}
+                    >
+                        Upgrade to Pro<br>($19/year)
+                    </button>
+                </div>
+
+            </div>
+        </div>
+{/if}
 </main>
 
 <style>
@@ -969,6 +1003,75 @@
         border-radius: 6px; /* Gives it the same rounded corners */
         vertical-align: middle; /* Aligns it with the button text */
     }
-        
+    /* --- Modal Styles --- */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 99;
+    }
 
+    .modal {
+        background: #fff;
+        border-radius: 8px;
+        padding: 2rem;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 100;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.75rem;
+        font-size: 2rem;
+        font-weight: bold;
+        color: #aaa;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .upgrade-modal-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+    }
+    .upgrade-modal-content h2, .upgrade-modal-content p {
+        margin: 0;
+    }   
+    /* --- Ensures landing page + app page buttons look the same --- */
+    .button-primary, :global(.lemonsqueezy-button) {
+        display: inline-block; 
+        box-sizing: border-box;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 1.5; 
+        color: white;
+        text-decoration: none; 
+        text-align: center; 
+        vertical-align: middle;
+        background-color: #3498db;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .button-primary:hover, :global(.lemonsqueezy-button:hover) {
+        background-color: #2980b9;
+        text-decoration: none;
+    }
 </style>
