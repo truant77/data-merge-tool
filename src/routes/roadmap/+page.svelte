@@ -24,21 +24,22 @@
                 <li>Excel (.xlsx & .xls) File Support</li>
                 <li>File Preview Table</li>
                 <li>Excel and CSV Download</li>
-            </ul>
-        </section>
-
-        <section class="roadmap-column">
-            <h2>🛠️ Building Next</h2>
-            <ul>
                 <li>Automated Pro License Delivery</li>
                 <li>Export Column Selector</li>
             </ul>
         </section>
 
         <section class="roadmap-column">
-            <h2>💡 Under Consideration</h2>
+            <h2>🛠️ Building Next</h2>
             <ul>
                 <li>Fuzzy Matching</li>
+            </ul>
+        </section>
+
+        <section class="roadmap-column">
+            <h2>💡 Under Consideration</h2>
+            <ul>
+                
                 <li>Data "Update" Function</li>
                 <li>Multi-Column Matching</li>
                 <li>Drag-and-Drop File Uploads</li>
